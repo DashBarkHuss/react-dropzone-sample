@@ -2,7 +2,7 @@ import React, { useState, useRef, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import { image64toCanvasRefDash } from './utils.js';
+import { image64toCanvasRef } from './utils.js';
 
 const baseStyle = {
   flex: 1,
@@ -91,7 +91,7 @@ export default function ImgDropAndCrop(props) {
       y: (dimensions.height * pixelCrop.y) / 100,
       x: (dimensions.width * pixelCrop.x) / 100,
     };
-    console.log('img64', image64toCanvasRefDash(canvasRef, imgSrc, canvasCrop));
+    console.log('img64', image64toCanvasRef(canvasRef, imgSrc, canvasCrop));
   };
   const style = useMemo(
     () => ({
