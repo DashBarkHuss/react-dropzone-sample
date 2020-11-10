@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { verify } from 'sinon';
 const baseStyle = {
   flex: 1,
   display: 'flex',
@@ -27,16 +28,18 @@ const acceptStyle = {
 const rejectStyle = {
   borderColor: '#ff1744',
 };
+// const verify = (file) => file.type !== 'image/vnd.adobe.photoshop';
 
 export default function ImgDropAndCrop(props) {
   const [file, setFile] = useState(null);
   const [imgSrc, setImgSrc] = useState(null);
   const [errorMsgs, setErrorMsgs] = useState([]);
   const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
-    accept: 'image/*',
+    accept: ['image/x-png', 'image/png', 'image/jpg', 'image/jpeg', 'image/gif'],
     onDrop: (acceptedFiles, rejectedFiles) => {
       const file = acceptedFiles[0]; //we are only excepting one file at a time (multiple: false) so we can set it to the first item in the array
       if (file) {
+        setErrorMsgs([]);
         setFile(Object.assign(file, { preview: URL.createObjectURL(file) }));
         const reader = new FileReader();
         reader.addEventListener(
@@ -49,9 +52,10 @@ export default function ImgDropAndCrop(props) {
         );
         reader.readAsDataURL(file);
       } else {
-        rejectedFiles.forEach((f) => {
-          setErrorMsgs([...errorMsgs, `${f.errors[0].code}: ${f.errors[0].message}`]);
-        });
+        const errorsArray = rejectedFiles[0].errors.map((e) => `${e.code}: ${e.message}`);
+        setImgSrc(null);
+        setFile(null);
+        setErrorMsgs(errorsArray);
       }
     },
     multiple: false,
