@@ -2,6 +2,9 @@ import React, { useState, useRef, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { base64StringtoFile } from './utils.js';
+import { downloadBase64File } from './utils.js';
+import { extractImageFileExtensionFromBase64 } from './utils.js';
 import { image64toCanvasRef } from './utils.js';
 
 const baseStyle = {
@@ -31,15 +34,14 @@ const acceptStyle = {
 const rejectStyle = {
   borderColor: '#ff1744',
 };
-// const verify = (file) => file.type !== 'image/vnd.adobe.photoshop';
 
 export default function ImgDropAndCrop(props) {
   const [imgSrc, setImgSrc] = useState(null);
-  const [dimensions, setDimensions] = useState(null);
   const [errorMsgs, setErrorMsgs] = useState([]);
   const [crop, setCrop] = useState({
     aspect: 1 / 1,
   });
+  const [downloadAvailable, setDownloadAvailable] = useState(false);
 
   const imagePreviewCanvasRef = useRef();
 
@@ -68,9 +70,16 @@ export default function ImgDropAndCrop(props) {
     maxSize: 3000000,
     minSize: 3000,
   });
-  const handleImageLoaded = (image) => {
-    console.log(image);
-  };
+  const handleImageLoaded = (image) => {};
+  const style = useMemo(
+    () => ({
+      ...baseStyle,
+      ...(isDragActive ? activeStyle : {}),
+      ...(isDragAccept ? acceptStyle : {}),
+      ...(isDragReject ? rejectStyle : {}),
+    }),
+    [isDragActive, isDragReject, isDragAccept]
+  );
 
   const getImageDimensions = async (imgSrc) => {
     var img = new Image();
@@ -83,6 +92,7 @@ export default function ImgDropAndCrop(props) {
     return dimensions;
   };
   const handleCropComplete = async (crop, pixelCrop) => {
+    if (crop.x === 0) return;
     const canvasRef = imagePreviewCanvasRef.current;
     const dimensions = await getImageDimensions(imgSrc);
     const canvasCrop = {
@@ -91,18 +101,20 @@ export default function ImgDropAndCrop(props) {
       y: (dimensions.height * pixelCrop.y) / 100,
       x: (dimensions.width * pixelCrop.x) / 100,
     };
-    console.log('img64', image64toCanvasRef(canvasRef, imgSrc, canvasCrop));
+    image64toCanvasRef(canvasRef, imgSrc, canvasCrop);
+    setDownloadAvailable(true);
   };
-  const style = useMemo(
-    () => ({
-      ...baseStyle,
-      ...(isDragActive ? activeStyle : {}),
-      ...(isDragAccept ? acceptStyle : {}),
-      ...(isDragReject ? rejectStyle : {}),
-    }),
-    [isDragActive, isDragReject, isDragAccept]
-  );
 
+  const download = (canvasRef) => {
+    const fileExtension = extractImageFileExtensionFromBase64(imgSrc);
+    const imageData64 = canvasRef.toDataURL('image/' + fileExtension);
+    const fileName = 'previewFile.' + fileExtension;
+    const myNewCroppedFile = base64StringtoFile(imageData64, fileName);
+    downloadBase64File(imageData64, fileName);
+  };
+  const handleDownload = () => {
+    download(imagePreviewCanvasRef.current);
+  };
   return (
     <div className="container">
       <div {...getRootProps({ style })}>
@@ -118,7 +130,11 @@ export default function ImgDropAndCrop(props) {
       />
       {errorMsgs && <p>{errorMsgs}</p>}
       <p>Preview Canvas Crop</p>
+
       <canvas ref={imagePreviewCanvasRef}></canvas>
+      <button disabled={!downloadAvailable} onClick={handleDownload}>
+        download
+      </button>
     </div>
   );
 }
