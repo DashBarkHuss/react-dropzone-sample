@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -43,7 +43,9 @@ export default function ImgDropAndCrop(props) {
     aspect: 1 / 1,
   });
   const [downloadAvailable, setDownloadAvailable] = useState(false);
-
+  useEffect(() => {
+    if (imgSrc) setImgSrcExt(extractImageFileExtensionFromBase64(imgSrc));
+  }, [imgSrc]);
   const imagePreviewCanvasRef = useRef();
 
   const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
@@ -56,9 +58,7 @@ export default function ImgDropAndCrop(props) {
         reader.addEventListener(
           'load',
           () => {
-            setImgSrc(reader.result, () =>
-              setImgSrcExt(extractImageFileExtensionFromBase64(imgSrc))
-            );
+            setImgSrc(reader.result);
           },
           false
         );
