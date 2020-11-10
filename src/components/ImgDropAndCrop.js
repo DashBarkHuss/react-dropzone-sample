@@ -49,12 +49,6 @@ export default function ImgDropAndCrop(props) {
       const file = acceptedFiles[0]; //we are only excepting one file at a time (multiple: false) so we can set it to the first item in the array
       if (file) {
         setErrorMsgs([]);
-        // const image = new Image();
-        // image.addEventListener('load', () => {
-        //   console.log(`${image.width}x${image.height}`);
-        //   image.src = URL.createObjectURL(file);
-        // });
-
         const reader = new FileReader();
         reader.addEventListener(
           'load',
@@ -78,25 +72,19 @@ export default function ImgDropAndCrop(props) {
     console.log(image);
   };
 
-  const getImageDimenstions = async (imgSrc) => {
-    // create new Image or get it right from DOM,
-    // var img = document.getElementById("myImage");
+  const getImageDimensions = async (imgSrc) => {
     var img = new Image();
     const dimensions = await new Promise((resolve) => {
       img.onload = function () {
         resolve({ width: this.width, height: this.height });
-        // this.width contains image width
-        // this.height contains image height
       };
       img.src = imgSrc;
     });
     return dimensions;
   };
   const handleCropComplete = async (crop, pixelCrop) => {
-    console.log('crop', crop);
-    console.log('pixelcrop', pixelCrop);
     const canvasRef = imagePreviewCanvasRef.current;
-    const dimensions = await getImageDimenstions(imgSrc);
+    const dimensions = await getImageDimensions(imgSrc);
     const canvasCrop = {
       height: (dimensions.height * pixelCrop.height) / 100,
       width: (dimensions.width * pixelCrop.width) / 100,
