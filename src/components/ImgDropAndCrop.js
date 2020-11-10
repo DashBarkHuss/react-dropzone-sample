@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { image64toCanvasRefDash } from './utils.js';
 
 const baseStyle = {
   flex: 1,
@@ -34,8 +35,13 @@ const rejectStyle = {
 
 export default function ImgDropAndCrop(props) {
   const [imgSrc, setImgSrc] = useState(null);
+  const [dimensions, setDimensions] = useState(null);
   const [errorMsgs, setErrorMsgs] = useState([]);
-  const [crop, setCrop] = useState({ aspect: 1 / 1 });
+  const [crop, setCrop] = useState({
+    aspect: 1 / 1,
+  });
+
+  const imagePreviewCanvasRef = useRef();
 
   const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
     accept: ['image/x-png', 'image/png', 'image/jpg', 'image/jpeg', 'image/gif'],
@@ -43,6 +49,12 @@ export default function ImgDropAndCrop(props) {
       const file = acceptedFiles[0]; //we are only excepting one file at a time (multiple: false) so we can set it to the first item in the array
       if (file) {
         setErrorMsgs([]);
+        // const image = new Image();
+        // image.addEventListener('load', () => {
+        //   console.log(`${image.width}x${image.height}`);
+        //   image.src = URL.createObjectURL(file);
+        // });
+
         const reader = new FileReader();
         reader.addEventListener(
           'load',
@@ -65,8 +77,33 @@ export default function ImgDropAndCrop(props) {
   const handleImageLoaded = (image) => {
     console.log(image);
   };
-  const handleCropComplete = (crop, pixelCrop) => {
-    console.log(crop, pixelCrop);
+
+  const getImageDimenstions = async (imgSrc) => {
+    // create new Image or get it right from DOM,
+    // var img = document.getElementById("myImage");
+    var img = new Image();
+    const dimensions = await new Promise((resolve) => {
+      img.onload = function () {
+        resolve({ width: this.width, height: this.height });
+        // this.width contains image width
+        // this.height contains image height
+      };
+      img.src = imgSrc;
+    });
+    return dimensions;
+  };
+  const handleCropComplete = async (crop, pixelCrop) => {
+    console.log('crop', crop);
+    console.log('pixelcrop', pixelCrop);
+    const canvasRef = imagePreviewCanvasRef.current;
+    const dimensions = await getImageDimenstions(imgSrc);
+    const canvasCrop = {
+      height: (dimensions.height * pixelCrop.height) / 100,
+      width: (dimensions.width * pixelCrop.width) / 100,
+      y: (dimensions.height * pixelCrop.y) / 100,
+      x: (dimensions.width * pixelCrop.x) / 100,
+    };
+    console.log('img64', image64toCanvasRefDash(canvasRef, imgSrc, canvasCrop));
   };
   const style = useMemo(
     () => ({
@@ -92,6 +129,8 @@ export default function ImgDropAndCrop(props) {
         onImageLoaded={handleImageLoaded}
       />
       {errorMsgs && <p>{errorMsgs}</p>}
+      <p>Preview Canvas Crop</p>
+      <canvas ref={imagePreviewCanvasRef}></canvas>
     </div>
   );
 }
