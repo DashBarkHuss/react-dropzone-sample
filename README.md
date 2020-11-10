@@ -2,14 +2,15 @@
 
 ### **Resources:**
 
-1. Outdated code videos for react dropzone. So the code isn't correct but they were helpful still:
+1. Videos for creating a drag and crop react component. The code in the first video for is outdated. But it is still a helpful video.
 
 - [#25 Try REACTJS Tutorial - Dropzone](https://www.youtube.com/watch?v=aK3aUW08YGw&list=PLEsfXFp6DpzQbwYDx1zgcKJ4tzyWFaESK&index=25)
 - [#26 Try REACTJS Tutorial - Image Preview after Dropzone](https://www.youtube.com/watch?v=S6Zus2bLJCc&list=PLEsfXFp6DpzQbwYDx1zgcKJ4tzyWFaESK&index=26)
+- [#27 Try REACTJS Tutorial - Crop Image in React](https://www.youtube.com/watch?v=jyeRDo2tP_s&list=PLEsfXFp6DpzQbwYDx1zgcKJ4tzyWFaESK&index=27)
 
-2. Up-to-date [code video](https://www.youtube.com/watch?v=eftyBaoDkNA) for setting up a simple drag and drop with React dropzone
+1. Up-to-date [code video](https://www.youtube.com/watch?v=eftyBaoDkNA) for React dropzone
 
-1. React Dropzone [Docs](https://react-dropzone.js.org/)
+2. React Dropzone [Docs](https://react-dropzone.js.org/)
 
 # Getting Started with Create React App
 

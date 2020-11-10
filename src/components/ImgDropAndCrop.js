@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { verify } from 'sinon';
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
+
 const baseStyle = {
   flex: 1,
   display: 'flex',
@@ -31,21 +33,20 @@ const rejectStyle = {
 // const verify = (file) => file.type !== 'image/vnd.adobe.photoshop';
 
 export default function ImgDropAndCrop(props) {
-  const [file, setFile] = useState(null);
   const [imgSrc, setImgSrc] = useState(null);
   const [errorMsgs, setErrorMsgs] = useState([]);
+  const [crop, setCrop] = useState({ aspect: 1 / 1 });
+
   const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
     accept: ['image/x-png', 'image/png', 'image/jpg', 'image/jpeg', 'image/gif'],
     onDrop: (acceptedFiles, rejectedFiles) => {
       const file = acceptedFiles[0]; //we are only excepting one file at a time (multiple: false) so we can set it to the first item in the array
       if (file) {
         setErrorMsgs([]);
-        setFile(Object.assign(file, { preview: URL.createObjectURL(file) }));
         const reader = new FileReader();
         reader.addEventListener(
           'load',
           () => {
-            console.log(reader.result);
             setImgSrc(reader.result);
           },
           false
@@ -54,7 +55,6 @@ export default function ImgDropAndCrop(props) {
       } else {
         const errorsArray = rejectedFiles[0].errors.map((e) => `${e.code}: ${e.message}`);
         setImgSrc(null);
-        setFile(null);
         setErrorMsgs(errorsArray);
       }
     },
@@ -62,7 +62,12 @@ export default function ImgDropAndCrop(props) {
     maxSize: 3000000,
     minSize: 3000,
   });
-
+  const handleImageLoaded = (image) => {
+    console.log(image);
+  };
+  const handleCropComplete = (crop, pixelCrop) => {
+    console.log(crop, pixelCrop);
+  };
   const style = useMemo(
     () => ({
       ...baseStyle,
@@ -72,15 +77,6 @@ export default function ImgDropAndCrop(props) {
     }),
     [isDragActive, isDragReject, isDragAccept]
   );
-  const image = file ? (
-    <div key={file.name}>
-      <div>
-        <img src={file.preview} style={{ width: '200px' }} alt="preview" />
-      </div>
-    </div>
-  ) : (
-    ''
-  );
 
   return (
     <div className="container">
@@ -88,9 +84,14 @@ export default function ImgDropAndCrop(props) {
         <input {...getInputProps()} />
         <p>Drag 'n' drop some files here, or click to select files</p>
       </div>
+      <ReactCrop
+        src={imgSrc}
+        crop={crop}
+        onChange={(newCrop) => setCrop(newCrop)}
+        onComplete={handleCropComplete}
+        onImageLoaded={handleImageLoaded}
+      />
       {errorMsgs && <p>{errorMsgs}</p>}
-      {image && <div>{image}</div>}
-      {imgSrc && <img src={imgSrc} alt="preview" />}
     </div>
   );
 }
