@@ -37,6 +37,7 @@ const rejectStyle = {
 
 export default function ImgDropAndCrop(props) {
   const [imgSrc, setImgSrc] = useState(null);
+  const [imgSrcExt, setImgSrcExt] = useState(null);
   const [errorMsgs, setErrorMsgs] = useState([]);
   const [crop, setCrop] = useState({
     aspect: 1 / 1,
@@ -55,7 +56,9 @@ export default function ImgDropAndCrop(props) {
         reader.addEventListener(
           'load',
           () => {
-            setImgSrc(reader.result);
+            setImgSrc(reader.result, () =>
+              setImgSrcExt(extractImageFileExtensionFromBase64(imgSrc))
+            );
           },
           false
         );
@@ -63,6 +66,7 @@ export default function ImgDropAndCrop(props) {
       } else {
         const errorsArray = rejectedFiles[0].errors.map((e) => `${e.code}: ${e.message}`);
         setImgSrc(null);
+        setImgSrcExt(null);
         setErrorMsgs(errorsArray);
       }
     },
@@ -106,9 +110,8 @@ export default function ImgDropAndCrop(props) {
   };
 
   const download = (canvasRef) => {
-    const fileExtension = extractImageFileExtensionFromBase64(imgSrc);
-    const imageData64 = canvasRef.toDataURL('image/' + fileExtension);
-    const fileName = 'previewFile.' + fileExtension;
+    const imageData64 = canvasRef.toDataURL('image/' + imgSrcExt);
+    const fileName = 'previewFile.' + imgSrcExt;
     const myNewCroppedFile = base64StringtoFile(imageData64, fileName);
     downloadBase64File(imageData64, fileName);
   };
