@@ -30,16 +30,28 @@ const rejectStyle = {
 
 export default function ImgDropAndCrop(props) {
   const [file, setFile] = useState(null);
-  const [errorMsg, setErrorMsg] = useState(null);
+  const [imgSrc, setImgSrc] = useState(null);
+  const [errorMsgs, setErrorMsgs] = useState([]);
   const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
     accept: 'image/*',
     onDrop: (acceptedFiles, rejectedFiles) => {
       const file = acceptedFiles[0]; //we are only excepting one file at a time (multiple: false) so we can set it to the first item in the array
-      const rejected = rejectedFiles[0];
       if (file) {
         setFile(Object.assign(file, { preview: URL.createObjectURL(file) }));
+        const reader = new FileReader();
+        reader.addEventListener(
+          'load',
+          () => {
+            console.log(reader.result);
+            setImgSrc(reader.result);
+          },
+          false
+        );
+        reader.readAsDataURL(file);
       } else {
-        setErrorMsg(`${rejected.errors[0].code}: ${rejected.errors[0].message}`); //might need to change this too loop through errors but leave it for now
+        rejectedFiles.forEach((f) => {
+          setErrorMsgs([...errorMsgs, `${f.errors[0].code}: ${f.errors[0].message}`]);
+        });
       }
     },
     multiple: false,
@@ -65,14 +77,16 @@ export default function ImgDropAndCrop(props) {
   ) : (
     ''
   );
+
   return (
     <div className="container">
       <div {...getRootProps({ style })}>
         <input {...getInputProps()} />
         <p>Drag 'n' drop some files here, or click to select files</p>
       </div>
-      {errorMsg && <p>{errorMsg}</p>}
+      {errorMsgs && <p>{errorMsgs}</p>}
       {image && <div>{image}</div>}
+      {imgSrc && <img src={imgSrc} alt="preview" />}
     </div>
   );
 }
