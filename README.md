@@ -1,6 +1,15 @@
 ## Learning React Dropzone
 
-### **Resources:**
+## Backend
+
+Check out the backend companion [code here.](https://github.com/DashBarkHuss/express_post_image)
+
+## Demo Video
+
+Watch how the front end and back end work together:
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/_CZtTBHZn0o/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE)
+
+### **Resources Used:**
 
 1. Videos for creating a drag and crop react component. The code in the first video for is outdated. But it is still a helpful video.
 

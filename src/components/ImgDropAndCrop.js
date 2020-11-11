@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import { base64StringtoFile } from './utils.js';
-import { downloadBase64File } from './utils.js';
-import { extractImageFileExtensionFromBase64 } from './utils.js';
-import { image64toCanvasRef } from './utils.js';
+import {
+  downloadBase64File,
+  base64StringtoFile,
+  image64toCanvasRef,
+  extractImageFileExtensionFromBase64,
+} from './utils.js';
 
 const baseStyle = {
   flex: 1,
@@ -42,10 +44,22 @@ export default function ImgDropAndCrop(props) {
   const [crop, setCrop] = useState({
     aspect: 1 / 1,
   });
-  const [downloadAvailable, setDownloadAvailable] = useState(false);
+  const [fileName, setFileName] = useState(null);
+  const [imageData64, setImageData64] = useState(null);
+  const [imageCropped, setImageCropped] = useState(false);
+
+  //imgSrc is set onDrop, then set img extension
   useEffect(() => {
     if (imgSrc) setImgSrcExt(extractImageFileExtensionFromBase64(imgSrc));
   }, [imgSrc]);
+
+  //imageCropped is set to true on handle crop. then set imageData64
+  useEffect(() => {
+    if (imageCropped) {
+      setImageData64(imagePreviewCanvasRef.current.toDataURL('image/' + imgSrcExt));
+      setFileName('previewFile.' + imgSrcExt);
+    }
+  }, [imageCropped, imgSrcExt]);
   const imagePreviewCanvasRef = useRef();
 
   const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
@@ -95,6 +109,7 @@ export default function ImgDropAndCrop(props) {
     });
     return dimensions;
   };
+
   const handleCropComplete = async (crop, pixelCrop) => {
     if (crop.x === 0) return;
     const canvasRef = imagePreviewCanvasRef.current;
@@ -105,19 +120,42 @@ export default function ImgDropAndCrop(props) {
       y: (dimensions.height * pixelCrop.y) / 100,
       x: (dimensions.width * pixelCrop.x) / 100,
     };
-    image64toCanvasRef(canvasRef, imgSrc, canvasCrop);
-    setDownloadAvailable(true);
+    await image64toCanvasRef(canvasRef, imgSrc, canvasCrop, () => {
+      setImageCropped(true);
+    });
   };
 
-  const download = (canvasRef) => {
-    const imageData64 = canvasRef.toDataURL('image/' + imgSrcExt);
-    const fileName = 'previewFile.' + imgSrcExt;
+  const upload = (imageData64, fileName) => {
     const myNewCroppedFile = base64StringtoFile(imageData64, fileName);
+    var fd = new FormData();
+    fd.append('image', myNewCroppedFile);
+    fetch('http://localhost:4000/image', {
+      method: 'POST',
+      body: fd,
+      mode: 'cors',
+    })
+      .then(async (response) => {
+        if (response.status === 500) {
+          let responseText = await response.text();
+          throw new Error(responseText);
+        }
+        return response.text();
+      })
+      .then(console.log)
+      .catch(console.log);
+  };
+
+  const handleDownload = () => {
+    download(imageData64, fileName);
+  };
+  const handleUpload = () => {
+    upload(imageData64, fileName);
+  };
+
+  const download = (imageData64, fileName) => {
     downloadBase64File(imageData64, fileName);
   };
-  const handleDownload = () => {
-    download(imagePreviewCanvasRef.current);
-  };
+
   return (
     <div className="container">
       <div {...getRootProps({ style })}>
@@ -135,8 +173,11 @@ export default function ImgDropAndCrop(props) {
       <p>Preview Canvas Crop</p>
 
       <canvas ref={imagePreviewCanvasRef}></canvas>
-      <button disabled={!downloadAvailable} onClick={handleDownload}>
+      <button disabled={!imageCropped} onClick={handleDownload}>
         download
+      </button>
+      <button disabled={!imageCropped} onClick={handleUpload}>
+        upload
       </button>
     </div>
   );
